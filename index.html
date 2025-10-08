@@ -277,7 +277,7 @@
         <div class="chat-container">
             <div class="chat-header">
                 <div class="status-indicator"></div>
-                <div class="status-text" id="statusText">Ready to find clients</div>
+                <div class="status-text" id="statusText">Ready to find clients with Okami</div>
             </div>
             
             <div class="chat-messages" id="chatMessages">
@@ -296,10 +296,10 @@
         // CONFIGURATION SECTION
         // ======================
         // PUT YOUR GEMINI API KEY HERE (replace the text between the quotes)
-        const GEMINI_API_KEY = 'AIzaSyDZqkZgL892NORDoA9PbKBXwWy3Eua_2AA';
+        const 'AIzaSyDZqkZgL892NORDoA9PbKBXwWy3Eua_2AA';
         
         // Gemini API endpoint
-        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+        const `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
         
         // DOM Elements
         const chatMessages = document.getElementById('chatMessages');
@@ -359,7 +359,7 @@
         // Generate bot response using Gemini API
         async function generateBotResponse(userMessage) {
             // Check if API key is configured
-            if (GEMINI_API_KEY === 'AIzaSyDZqkZgL892NORDoA9PbKBXwWy3Eua_2AA') {
+            if ('AIzaSyDZqkZgL892NORDoA9PbKBXwWy3Eua_2AA') {
                 const errorMessage = {
                     role: 'bot',
                     content: "Error: Please replace 'PUT YOUR GEMINI API KEY HERE' with your actual Gemini API key in the code."
@@ -498,4 +498,5 @@ Keep your responses concise, actionable, and focused on results.`;
     </script>
 </body>
 </html>
+
 
