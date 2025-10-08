@@ -295,11 +295,11 @@
         // ======================
         // CONFIGURATION SECTION
         // ======================
-        // PUT YOUR HUGGING FACE TOKEN HERE (replace the text between the quotes)
-        const HUGGING_FACE_TOKEN = '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';
+        // PUT YOUR OPENAI API KEY HERE (replace the text between the quotes)
+        const OPENAI_API_KEY = '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';
         
-        // Using a reliable text generation model
-        const MODEL_ENDPOINT = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
+        // OpenAI API endpoint
+        const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
         
         // DOM Elements
         const chatMessages = document.getElementById('chatMessages');
@@ -356,13 +356,13 @@
             generateBotResponse(message);
         }
         
-        // Generate bot response using Hugging Face Inference API
+        // Generate bot response using OpenAI API
         async function generateBotResponse(userMessage) {
-            // Check if token is configured
-            if (HUGGING_FACE_TOKEN === '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') {
+            // Check if API key is configured
+            if (OPENAI_API_KEY === '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 {
                 const errorMessage = {
                     role: 'bot',
-                    content: "Error: Please replace 'PUT YOUR HUGGING FACE TOKEN HERE' with your actual Hugging Face token in the code."
+                    content: "Error: Please replace 'PUT YOUR OPENAI API KEY HERE' with your actual OpenAI API key in the code."
                 };
                 chatHistory.push(errorMessage);
                 saveChatHistory();
@@ -371,123 +371,124 @@
                 return;
             }
             
-            // Format prompt for Mistral model
-            const prompt = `<s>[INST] You are a professional, confident, and strategic Virtual Assistant Client Outreach Agent. Your purpose is to help users find high-quality leads and write strong cold outreach messages for clients. Always structure your replies with the following format:
+            // Prepare the conversation history for the API
+            const messages = [
+                {
+                    role: "system",
+                    content: `You are a professional, confident, and strategic Virtual Assistant Client Outreach Agent. Your purpose is to help users find high-quality leads and write strong cold outreach messages for clients. Always structure your replies with the following format:
                     
 1. **Find**: Identify the best prospects and where to find them
 2. **Draft**: Create a compelling outreach message draft
 3. **Polish**: Suggest improvements to make the message more effective
 4. **Send**: Provide tactical advice on when and how to send the message
 
-Keep your responses concise, actionable, and focused on results.
-
-User: ${userMessage} [/INST]`;
+Keep your responses concise, actionable, and focused on results.`
+                }
+            ];
+            
+            // Add conversation history (only last 5 messages to avoid token limits)
+            const recentHistory = chatHistory.slice(-5);
+            recentHistory.forEach(msg => {
+                messages.push({
+                    role: msg.role === 'user' ? 'user' : 'assistant',
+                    content: msg.content
+                });
+            });
+            
+            // Add the current user message
+            messages.push({
+                role: "user",
+                content: userMessage
+            });
             
             try {
-                const response = await fetch(MODEL_ENDPOINT, {
+                const response = await fetch(OPENAI_API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${HUGGING_FACE_TOKEN}`
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`
                     },
                     body: JSON.stringify({
-                        inputs: prompt,
-                        parameters: {
-                            max_new_tokens: 500,
-                            temperature: 0.7,
-                            top_p: 0.9,
-                            repetition_penalty: 1.1,
-                            return_full_text: false
-                        }
+                        model: 'gpt-4', // Using GPT-4 (most capable model)
+                        messages: messages,
+                        temperature: 0.7,
+                        max_tokens: 500
                     })
                 });
                 
-                let data;
-                try {
-                    data = await response.json();
-                } catch (e) {
-                    throw new Error('Invalid response from API');
-                }
-                
                 if (!response.ok) {
-                    let errorMsg = `API error: ${response.status}`;
-                    if (data && data.error) errorMsg += ` - ${data.error}`;
-                    throw new Error(errorMsg);
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`API error: ${response.status} - ${errorData.error || response.statusText}`);
                 }
                 
-                let botReply = '';
-                if (Array.isArray(data)) {
-                    botReply = data[0].generated_text || '';
-                } else if (data.generated_text) {
-                    botReply = data.generated_text;
-                } else {
-                    throw new Error('Unexpected response format');
-                }
+                const data = await response.json();
+                const botReply = data.choices[0].message.content;
                 
-                // Clean response
-                botReply = botReply
-                    .replace(/<\/s>/g, '')
-                    .replace(/<s>/g, '')
-                    .trim();
-                
-                if (!botReply) {
-                    botReply = "I couldn't generate a response. Please try again.";
-                }
-                
-                const botMessage = { role: 'bot', content: botReply };
+                // Add bot response to chat
+                const botMessage = {
+                    role: 'bot',
+                    content: botReply
+                };
                 chatHistory.push(botMessage);
                 saveChatHistory();
                 renderMessage(botMessage);
             } catch (error) {
-                console.error('API Error:', error);
+                console.error('Error calling OpenAI API:', error);
                 const errorMessage = {
                     role: 'bot',
-                    content: `Error: ${error.message}. Check console (F12) for details.`
+                    content: `I encountered an error: ${error.message}. Check console (F12) for details.`
                 };
                 chatHistory.push(errorMessage);
                 saveChatHistory();
                 renderMessage(errorMessage);
             } finally {
+                // Reset status
                 statusText.textContent = 'Ready to find clients';
                 const loadingIndicator = statusText.querySelector('.loading');
-                if (loadingIndicator) loadingIndicator.remove();
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
             }
         }
         
-        // Render message
+        // Render a single message
         function renderMessage(message) {
             const messageElement = document.createElement('div');
-            messageElement.classList.add('message', `${message.role}-message`);
-            
-            const header = document.createElement('div');
-            header.classList.add('message-header');
+            messageElement.classList.add('message');
+            messageElement.classList.add(`${message.role}-message`);
             
             const icon = document.createElement('div');
-            icon.classList.add(`${message.role}-icon`);
-            icon.textContent = message.role === 'user' ? 'U' : 'AI';
+            icon.classList.add('message-header');
             
-            const name = document.createElement('span');
-            name.textContent = message.role === 'user' ? 'You' : 'Outreach Agent';
+            const iconElement = document.createElement('div');
+            iconElement.classList.add(`${message.role}-icon`);
+            iconElement.textContent = message.role === 'user' ? 'U' : 'AI';
             
-            header.appendChild(icon);
-            header.appendChild(name);
-            messageElement.appendChild(header);
+            const nameElement = document.createElement('span');
+            nameElement.textContent = message.role === 'user' ? 'You' : 'Outreach Agent';
             
-            const content = document.createElement('div');
-            content.textContent = message.content;
-            messageElement.appendChild(content);
+            icon.appendChild(iconElement);
+            icon.appendChild(nameElement);
+            messageElement.appendChild(icon);
+            
+            const contentElement = document.createElement('div');
+            contentElement.textContent = message.content;
+            messageElement.appendChild(contentElement);
             
             chatMessages.appendChild(messageElement);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
-        // Render chat history
+        // Render entire chat history
         function renderChatHistory() {
             chatMessages.innerHTML = '';
-            chatHistory.forEach(renderMessage);
+            
+            chatHistory.forEach(message => {
+                renderMessage(message);
+            });
         }
         
-        // Save to localStorage
+        // Save chat history to localStorage
         function saveChatHistory() {
             localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
         }
