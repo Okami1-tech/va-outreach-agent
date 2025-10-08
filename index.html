@@ -265,42 +265,6 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
-        /* API Key warning */
-        .api-warning {
-            background: rgba(255, 100, 100, 0.1);
-            border: 1px solid rgba(255, 100, 100, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px auto;
-            max-width: 600px;
-            text-align: center;
-            display: none;
-        }
-        
-        .api-warning.show {
-            display: block;
-        }
-        
-        /* Model info */
-        .model-info {
-            font-size: 0.85rem;
-            color: #8892b0;
-            text-align: center;
-            margin-top: 5px;
-            font-style: italic;
-        }
-        
-        /* Error details */
-        .error-details {
-            background: rgba(255, 50, 50, 0.1);
-            border: 1px solid rgba(255, 50, 50, 0.3);
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #ff6b6b;
-        }
     </style>
 </head>
 <body>
@@ -308,10 +272,6 @@
         <header>
             <h1>VA Client Outreach Agent</h1>
             <p class="subtitle">Find & Close Clients Fast — Your AI-powered assistant for generating high-quality leads and crafting compelling outreach messages</p>
-            <div class="api-warning" id="apiWarning">
-                <strong>Hugging Face Token Required!</strong> Please add your Hugging Face API token in the JavaScript configuration section at the top of this file.
-            </div>
-            <p class="model-info">Okami Nalado (The Head)</p>
         </header>
         
         <div class="chat-container">
@@ -335,16 +295,11 @@
         // ======================
         // CONFIGURATION SECTION
         // ======================
-        // Replace 'YOUR_HUGGING_FACE_TOKEN' with your actual Hugging Face API token
-        const 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;
+        // PUT YOUR HUGGING FACE TOKEN HERE (replace the text between the quotes)
+        const HUGGING_FACE_TOKEN = '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';
         
-        // Using a reliable text generation model that works with the Inference API
+        // Using a reliable text generation model
         const MODEL_ENDPOINT = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
-        
-        // Check if API token is configured
-        if (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) {
-            document.getElementById('apiWarning').classList.add('show');
-        }
         
         // DOM Elements
         const chatMessages = document.getElementById('chatMessages');
@@ -403,58 +358,40 @@
         
         // Generate bot response using Hugging Face Inference API
         async function generateBotResponse(userMessage) {
-            // Check if API token is configured
-            if (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) {
-                // Show error message
+            // Check if token is configured
+            if (HUGGING_FACE_TOKEN === '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') {
                 const errorMessage = {
                     role: 'bot',
-                    content: "Error: Please configure your Hugging Face API token in the JavaScript configuration section at the top of this file."
+                    content: "Error: Please replace 'PUT YOUR HUGGING FACE TOKEN HERE' with your actual Hugging Face token in the code."
                 };
                 chatHistory.push(errorMessage);
                 saveChatHistory();
                 renderMessage(errorMessage);
-                
-                // Reset status
                 statusText.textContent = 'Ready to find clients';
                 return;
             }
             
-            // Format the prompt properly for Mistral-7B-Instruct
-            // This model uses [INST] and [/INST] tags
-            const systemPrompt = `You are a professional, confident, and strategic Virtual Assistant Client Outreach Agent. Your purpose is to help users find high-quality leads and write strong cold outreach messages for clients. Always structure your replies with the following format:
+            // Format prompt for Mistral model
+            const prompt = `<s>[INST] You are a professional, confident, and strategic Virtual Assistant Client Outreach Agent. Your purpose is to help users find high-quality leads and write strong cold outreach messages for clients. Always structure your replies with the following format:
                     
 1. **Find**: Identify the best prospects and where to find them
 2. **Draft**: Create a compelling outreach message draft
 3. **Polish**: Suggest improvements to make the message more effective
 4. **Send**: Provide tactical advice on when and how to send the message
 
-Keep your responses concise, actionable, and focused on results.`;
-            
-            // Build the conversation history with proper formatting
-            let conversation = `<s>[INST] ${systemPrompt} [/INST]</s>`;
-            
-            // Add recent chat history (last 3 exchanges to avoid token limits)
-            const recentHistory = chatHistory.slice(-6); // 3 user + 3 bot messages
-            recentHistory.forEach(msg => {
-                if (msg.role === 'user') {
-                    conversation += `<s>[INST] ${msg.content} [/INST]`;
-                } else {
-                    conversation += `${msg.content}</s>`;
-                }
-            });
-            
-            // Add current user message
-            conversation += `<s>[INST] ${userMessage} [/INST]`;
+Keep your responses concise, actionable, and focused on results.
+
+User: ${userMessage} [/INST]`;
             
             try {
                 const response = await fetch(MODEL_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${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}`
+                        'Authorization': `Bearer ${HUGGING_FACE_TOKEN}`
                     },
                     body: JSON.stringify({
-                        inputs: conversation,
+                        inputs: prompt,
                         parameters: {
                             max_new_tokens: 500,
                             temperature: 0.7,
@@ -465,141 +402,94 @@ Keep your responses concise, actionable, and focused on results.`;
                     })
                 });
                 
-                // Handle the response properly
                 let data;
-                const contentType = response.headers.get('content-type');
-                
-                if (contentType && contentType.includes('application/json')) {
+                try {
                     data = await response.json();
-                } else {
-                    // Handle non-JSON response (sometimes happens with HF)
-                    const text = await response.text();
-                    try {
-                        data = JSON.parse(text);
-                    } catch (e) {
-                        throw new Error(`Unexpected response format: ${text.substring(0, 200)}...`);
-                    }
+                } catch (e) {
+                    throw new Error('Invalid response from API');
                 }
                 
                 if (!response.ok) {
-                    let errorMessage = `API error: ${response.status}`;
-                    if (data && data.error) {
-                        errorMessage += ` - ${data.error}`;
-                    }
-                    throw new Error(errorMessage);
+                    let errorMsg = `API error: ${response.status}`;
+                    if (data && data.error) errorMsg += ` - ${data.error}`;
+                    throw new Error(errorMsg);
                 }
                 
                 let botReply = '';
-                
-                // Handle different response formats
                 if (Array.isArray(data)) {
                     botReply = data[0].generated_text || '';
-                } else if (typeof data === 'object' && data.generated_text) {
+                } else if (data.generated_text) {
                     botReply = data.generated_text;
-                } else if (typeof data === 'string') {
-                    botReply = data;
                 } else {
-                    throw new Error('Unexpected API response format');
+                    throw new Error('Unexpected response format');
                 }
                 
-                // Clean up the response - remove any special tokens
+                // Clean response
                 botReply = botReply
                     .replace(/<\/s>/g, '')
-                    .replace(/\[INST\].*?\[\/INST\]/g, '')
                     .replace(/<s>/g, '')
                     .trim();
                 
-                // If the response is empty, provide a fallback
-                if (!botReply || botReply.length < 10) {
-                    botReply = "I apologize, but I couldn't generate a proper response. Please try rephrasing your request or check if your Hugging Face token has access to the model.";
+                if (!botReply) {
+                    botReply = "I couldn't generate a response. Please try again.";
                 }
                 
-                // Add bot response to chat
-                const botMessage = {
-                    role: 'bot',
-                    content: botReply
-                };
+                const botMessage = { role: 'bot', content: botReply };
                 chatHistory.push(botMessage);
                 saveChatHistory();
                 renderMessage(botMessage);
             } catch (error) {
-                console.error('Error calling Hugging Face API:', error);
+                console.error('API Error:', error);
                 const errorMessage = {
                     role: 'bot',
-                    content: `I encountered an error: ${error.message}.`
+                    content: `Error: ${error.message}. Check console (F12) for details.`
                 };
                 chatHistory.push(errorMessage);
                 saveChatHistory();
                 renderMessage(errorMessage);
-                
-                // Add detailed error for debugging
-                if (error.message.includes('401') || error.message.includes('403')) {
-                    const details = document.createElement('div');
-                    details.className = 'error-details';
-                    details.textContent = 'This usually means your Hugging Face token is invalid or doesn\'t have access to the model. Make sure you have a valid READ token and that you have accepted the model terms on Hugging Face.';
-                    document.querySelector('.bot-message:last-child .message-header').parentNode.appendChild(details);
-                } else if (error.message.includes('429')) {
-                    const details = document.createElement('div');
-                    details.className = 'error-details';
-                    details.textContent = 'You may have exceeded your Hugging Face API rate limits. Try again in a few minutes.';
-                    document.querySelector('.bot-message:last-child .message-header').parentNode.appendChild(details);
-                }
             } finally {
-                // Reset status
                 statusText.textContent = 'Ready to find clients';
                 const loadingIndicator = statusText.querySelector('.loading');
-                if (loadingIndicator) {
-                    loadingIndicator.remove();
-                }
+                if (loadingIndicator) loadingIndicator.remove();
             }
         }
         
-        // Render a single message
+        // Render message
         function renderMessage(message) {
             const messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            messageElement.classList.add(`${message.role}-message`);
+            messageElement.classList.add('message', `${message.role}-message`);
+            
+            const header = document.createElement('div');
+            header.classList.add('message-header');
             
             const icon = document.createElement('div');
-            icon.classList.add('message-header');
+            icon.classList.add(`${message.role}-icon`);
+            icon.textContent = message.role === 'user' ? 'U' : 'AI';
             
-            const iconElement = document.createElement('div');
-            iconElement.classList.add(`${message.role}-icon`);
-            iconElement.textContent = message.role === 'user' ? 'U' : 'AI';
+            const name = document.createElement('span');
+            name.textContent = message.role === 'user' ? 'You' : 'Outreach Agent';
             
-            const nameElement = document.createElement('span');
-            nameElement.textContent = message.role === 'user' ? 'You' : 'Outreach Agent';
+            header.appendChild(icon);
+            header.appendChild(name);
+            messageElement.appendChild(header);
             
-            icon.appendChild(iconElement);
-            icon.appendChild(nameElement);
-            messageElement.appendChild(icon);
-            
-            const contentElement = document.createElement('div');
-            contentElement.textContent = message.content;
-            messageElement.appendChild(contentElement);
+            const content = document.createElement('div');
+            content.textContent = message.content;
+            messageElement.appendChild(content);
             
             chatMessages.appendChild(messageElement);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
-        // Render entire chat history
+        // Render chat history
         function renderChatHistory() {
             chatMessages.innerHTML = '';
-            
-            chatHistory.forEach(message => {
-                renderMessage(message);
-            });
+            chatHistory.forEach(renderMessage);
         }
         
-        // Save chat history to localStorage
+        // Save to localStorage
         function saveChatHistory() {
             localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-        }
-        
-        // Initialize with instructions if token is configured
-        if (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) {
-            // Don't auto-send sample message to avoid token usage
-            // User can start chatting manually
         }
     </script>
 </body>
