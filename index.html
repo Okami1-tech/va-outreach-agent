@@ -1,78 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Okami Agent</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background:#0d0d0d; color:#f4f4f4;
-      display:flex; flex-direction:column; align-items:center;
-      min-height:100vh; padding:2rem;
-    }
-    h1 {color:#00c6ff; margin-bottom:1rem;}
-    #chatbox {
-      width:100%; max-width:600px; height:400px;
-      overflow-y:auto; background:#1a1a1a;
-      padding:1rem; border-radius:1rem; box-shadow:0 0 15px #00c6ff33;
-    }
-    .msg {margin:0.5rem 0;}
-    .user {color:#00c6ff;}
-    .bot {color:#fff;}
-    textarea {
-      width:100%; max-width:600px; margin-top:1rem;
-      background:#111; color:#fff; border:none; border-radius:0.5rem;
-      padding:0.75rem; resize:none;
-    }
-    button {
-      margin-top:0.5rem; padding:0.6rem 1.2rem;
-      background:#00c6ff; border:none; border-radius:0.5rem;
-      color:#000; font-weight:600; cursor:pointer;
-    }
-    button:hover {background:#00e0ff;}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA Client Outreach Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a192f 0%, #0d2b45 100%);
+            color: #e6f1ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #64ffda, #4deeea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #8892b0;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(13, 43, 69, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(100, 255, 218, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: rgba(10, 25, 47, 0.8);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background: #64ffda;
+            border-radius: 50%;
+            margin-right: 12px;
+            box-shadow: 0 0 10px #64ffda;
+        }
+
+        .status-text {
+            font-size: 0.9rem;
+            color: #64ffda;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 18px 22px;
+            border-radius: 18px;
+            line-height: 1.6;
+            animation: fadeIn 0.4s ease-out;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #1e3a5f 0%, #152a4a 100%);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background: linear-gradient(135deg, #112240 0%, #0a192f 100%);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            border-left: 2px solid #64ffda;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .user-icon, .bot-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .user-icon {
+            background: linear-gradient(135deg, #4deeea 0%, #64ffda 100%);
+            color: #0a192f;
+        }
+
+        .bot-icon {
+            background: linear-gradient(135deg, #64ffda 0%, #4deeea 100%);
+            color: #0a192f;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: rgba(10, 25, 47, 0.8);
+            border-top: 1px solid rgba(100, 255, 218, 0.1);
+            display: flex;
+            gap: 15px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 16px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            background: rgba(13, 43, 69, 0.7);
+            color: #e6f1ff;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .message-input:focus {
+            border-color: #64ffda;
+            box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.2);
+        }
+
+        .message-input::placeholder {
+            color: #8892b0;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #64ffda 0%, #4deeea 100%);
+            color: #0a192f;
+            border: none;
+            border-radius: 50px;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(100, 255, 218, 0.3);
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(100, 255, 218, 0.4);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(10, 25, 47, 0.5);
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #64ffda 0%, #4deeea 100%);
+            border-radius: 4px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+                padding: 0 10px;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 15px 18px;
+            }
+            
+            .input-container {
+                padding: 15px;
+            }
+            
+            .message-input {
+                padding: 14px 18px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* Loading indicator */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(100, 255, 218, 0.3);
+            border-radius: 50%;
+            border-top-color: #64ffda;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-  <h1>Okami Agent</h1>
-  <div id="chatbox"></div>
-  <textarea id="prompt" rows="3" placeholder="Type your message..."></textarea>
-  <button onclick="askAgent()">Send</button>
+    <div class="container">
+        <header>
+            <h1>VA Client Outreach Agent</h1>
+            <p class="subtitle">Find & Close Clients Fast — Your AI-powered assistant for generating high-quality leads and crafting compelling outreach messages</p>
+        </header>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="status-indicator"></div>
+                <div class="status-text" id="statusText">Ready to find clients</div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be added here dynamically -->
+            </div>
+            
+            <div class="input-container">
+                <input type="text" class="message-input" id="messageInput" placeholder="Describe your ideal client or ask for outreach help...">
+                <button class="send-button" id="sendButton">➤</button>
+            </div>
+        </div>
+    </div>
 
-  <script>
-    const API_KEY = "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"; //  🔑 Paste your OpenRouter key here
-    const MODEL = "meta-llama/llama-3.1-8b-instruct"; // Change to any model you like
+    <script>
+        // ======================
+        // CONFIGURATION SECTION
+        // ======================
+        // PUT YOUR GEMINI API KEY HERE (replace the text between the quotes)
+        const GEMINI_API_KEY = 'AIzaSyDZqkZgL892NORDoA9PbKBXwWy3Eua_2AA';
+        
+        // Gemini API endpoint
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+        
+        // DOM Elements
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const statusText = document.getElementById('statusText');
+        
+        // Initialize chat history from localStorage
+        let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+        
+        // Add initial bot message if chat is empty
+        if (chatHistory.length === 0) {
+            const welcomeMessage = {
+                role: 'bot',
+                content: "Hello! I'm your VA Client Outreach Agent. I specialize in helping you find high-quality leads and craft compelling cold outreach messages.\n\nJust describe your ideal client or ask for help with outreach, and I'll provide a strategic response following our proven framework:"
+            };
+            chatHistory.push(welcomeMessage);
+            saveChatHistory();
+        }
+        
+        // Render chat history
+        renderChatHistory();
+        
+        // Event Listeners
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        // Send message function
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            const userMessage = {
+                role: 'user',
+                content: message
+            };
+            chatHistory.push(userMessage);
+            saveChatHistory();
+            
+            // Clear input and render user message
+            messageInput.value = '';
+            renderMessage(userMessage);
+            
+            // Show loading status
+            statusText.textContent = 'Thinking...';
+            const loadingIndicator = document.createElement('span');
+            loadingIndicator.className = 'loading';
+            statusText.appendChild(loadingIndicator);
+            
+            // Generate bot response
+            generateBotResponse(message);
+        }
+        
+        // Generate bot response using Gemini API
+        async function generateBotResponse(userMessage) {
+            // Check if API key is configured
+            if (GEMINI_API_KEY === 'AIzaSyDZqkZgL892NORDoA9PbKBXwWy3Eua_2AA') {
+                const errorMessage = {
+                    role: 'bot',
+                    content: "Error: Please replace 'PUT YOUR GEMINI API KEY HERE' with your actual Gemini API key in the code."
+                };
+                chatHistory.push(errorMessage);
+                saveChatHistory();
+                renderMessage(errorMessage);
+                statusText.textContent = 'Ready to find clients';
+                return;
+            }
+            
+            // Prepare the prompt with instructions
+            const systemPrompt = `You are a professional, confident, and strategic Virtual Assistant Client Outreach Agent. Your purpose is to help users find high-quality leads and write strong cold outreach messages for clients. Always structure your replies with the following format:
+                    
+1. **Find**: Identify the best prospects and where to find them
+2. **Draft**: Create a compelling outreach message draft
+3. **Polish**: Suggest improvements to make the message more effective
+4. **Send**: Provide tactical advice on when and how to send the message
 
-    async function askAgent() {
-      const promptEl = document.getElementById("prompt");
-      const chatbox = document.getElementById("chatbox");
-      const userMsg = promptEl.value.trim();
-      if (!userMsg) return;
-
-      chatbox.innerHTML += <div class="msg user"><b>You:</b> ${userMsg}</div>;
-      promptEl.value = "";
-      chatbox.scrollTop = chatbox.scrollHeight;
-
-      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": Bearer ${API_KEY},
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            { role: "system", content: "You are a helpful digital assistant trained by OkamiNalado to give concise, smart replies." },
-            { role: "user", content: userMsg }
-          ]
-        })
-      });
-
-      const data = await res.json();
-      const reply = data?.choices?.[0]?.message?.content || "⚠️ No response";
-      chatbox.innerHTML += <div class="msg bot"><b>Agent:</b> ${reply}</div>;
-      chatbox.scrollTop = chatbox.scrollHeight;
-    }
-  </script>
+Keep your responses concise, actionable, and focused on results.`;
+            
+            // Build the conversation history
+            let prompt = `${systemPrompt}\n\n`;
+            
+            // Add recent chat history (last 4 exchanges to avoid token limits)
+            const recentHistory = chatHistory.slice(-8); // 4 user + 4 bot messages
+            recentHistory.forEach(msg => {
+                if (msg.role === 'user') {
+                    prompt += `User: ${msg.content}\n`;
+                } else {
+                    prompt += `Agent: ${msg.content}\n`;
+                }
+            });
+            
+            // Add current user message
+            prompt += `User: ${userMessage}\nAgent:`;
+            
+            try {
+                const response = await fetch(GEMINI_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`API error: ${response.status} - ${errorData.error || response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Extract the response text
+                let botReply = '';
+                if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+                    botReply = data.candidates[0].content.parts[0].text || '';
+                } else {
+                    throw new Error('Unexpected API response format');
+                }
+                
+                // Add bot response to chat
+                const botMessage = {
+                    role: 'bot',
+                    content: botReply
+                };
+                chatHistory.push(botMessage);
+                saveChatHistory();
+                renderMessage(botMessage);
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                const errorMessage = {
+                    role: 'bot',
+                    content: `I encountered an error: ${error.message}. Check console (F12) for details.`
+                };
+                chatHistory.push(errorMessage);
+                saveChatHistory();
+                renderMessage(errorMessage);
+            } finally {
+                // Reset status
+                statusText.textContent = 'Ready to find clients';
+                const loadingIndicator = statusText.querySelector('.loading');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
+            }
+        }
+        
+        // Render a single message
+        function renderMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(`${message.role}-message`);
+            
+            const icon = document.createElement('div');
+            icon.classList.add('message-header');
+            
+            const iconElement = document.createElement('div');
+            iconElement.classList.add(`${message.role}-icon`);
+            iconElement.textContent = message.role === 'user' ? 'U' : 'AI';
+            
+            const nameElement = document.createElement('span');
+            nameElement.textContent = message.role === 'user' ? 'You' : 'Outreach Agent';
+            
+            icon.appendChild(iconElement);
+            icon.appendChild(nameElement);
+            messageElement.appendChild(icon);
+            
+            const contentElement = document.createElement('div');
+            contentElement.textContent = message.content;
+            messageElement.appendChild(contentElement);
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Render entire chat history
+        function renderChatHistory() {
+            chatMessages.innerHTML = '';
+            
+            chatHistory.forEach(message => {
+                renderMessage(message);
+            });
+        }
+        
+        // Save chat history to localStorage
+        function saveChatHistory() {
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        }
+    </script>
 </body>
 </html>
